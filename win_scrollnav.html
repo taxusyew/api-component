@@ -9,7 +9,7 @@
         html, body {width: 100%;height: 100%;margin: 0; padding: 0;}
 
         .scroll-nav {
-          width: 600px;
+          /*width: 600px;*/
           position: fixed;
           height: 50px;
           line-height: 50px;
@@ -43,377 +43,405 @@
 </body>
 <script type="text/javascript">
 
-    var domScrollNav = document.getElementsByClassName('scroll-nav')[0];
-    var domNavTitle  = document.getElementsByClassName('nav-title');
-    var deviceWidth  = document.body.clientWidth;
-    var wrapWidth    = domScrollNav.clientWidth;
-    var reduceWidth  = wrapWidth - deviceWidth;
-    var moveX        = 0;
-    var startX       = 0;
-    var nowX         = 0;
-    var transX       = 0;
-    var gActive      = 0;
+    (function () {
 
-    domScrollNav.addEventListener('touchstart', function (e) {
-        // 防止移动端只能获取一次返回坐标值
-        e.preventDefault();
-        startX = e.targetTouches[0].clientX;
-    }, false);
+        var ScrollNav = function (_option) {
+          var _easeMode    = _option.easeMode || 'easeOutBounce';
+          var clsContainer = _option.clsContainer || 'scroll-nav';
+          var clsContainee = _option.clsContainee || 'nav-title';
+          var wrapWidth    = _option.containerWidth;
 
-    domScrollNav.addEventListener('touchmove', function (e) {
-        // 防止移动端只能获取一次返回坐标值
-        e.preventDefault();
-        // 头部移动的距离应该是：之前的距离 + 此次手指的移动
-        // 而不只是每次都从0开始
-        moveX = e.targetTouches[0].clientX - startX;
-        transX = moveX + nowX;
-        domScrollNav.style.webkitTransform='translateX('+Math.ceil(transX)+'px)';
-    }, false);
+          var domScrollNav = document.getElementsByClassName(clsContainer)[0];
+          var domNavTitle  = document.getElementsByClassName(clsContainee);
+          var deviceWidth  = document.body.clientWidth;
+          
+          var reduceWidth  = wrapWidth - deviceWidth;
+          var moveX        = 0;
+          var startX       = 0;
+          var nowX         = 0;
+          var transX       = 0;
+          var gActive      = 0;
 
-    domScrollNav.addEventListener('touchend', function () {
-        // 必须先更新一下nowX，否则走下面的流程会无法正确判断
-        nowX = nowX + moveX;
+          // 初始化容器宽度
+          domScrollNav.style.width = wrapWidth + 'px';
 
-        // 如果nav最左侧离开屏幕最左侧，就恢复
-        if ( nowX > 0) {
-            transition(domScrollNav, {field:'left',begin: nowX,change:nowX,ease:tween.easeOutBounce});
-            // domScrollNav.style.webkitTransform='translateX(0px)';
-            nowX = 0;
-        }
+          // 监听按下事件
+          domScrollNav.addEventListener('touchstart', function (e) {
+              // 防止移动端只能获取一次返回坐标值
+              e.preventDefault();
+              startX = e.targetTouches[0].clientX;
+          }, false);
 
-        // 如果nav最右侧离开屏幕最右侧，就恢复
-        if  (nowX < 0 && (Math.abs(nowX) > reduceWidth)) {
-            var changeX = (Math.abs(nowX) + deviceWidth ) -domScrollNav.clientWidth;
-            transition(domScrollNav, {field:'right',begin: nowX,change:changeX,ease:tween.easeOutBounce});
-            // domScrollNav.style.webkitTransform='translateX(-'+reduceWidth+'px)';
-            nowX = -reduceWidth;
-        }
-    }, false);
+          // 监听移动事件
+          domScrollNav.addEventListener('touchmove', function (e) {
+              // 防止移动端只能获取一次返回坐标值
+              e.preventDefault();
+              // 头部移动的距离应该是：之前的距离 + 此次手指的移动
+              // 而不只是每次都从0开始
+              moveX = e.targetTouches[0].clientX - startX;
+              transX = moveX + nowX;
+              domScrollNav.style.webkitTransform='translateX('+Math.ceil(transX)+'px)';
+          }, false);
 
-    function keepVisiable (_index) {
-        var domTarget = domNavTitle[_index];
+          // 监听抬起事件
+          domScrollNav.addEventListener('touchend', function () {
+              // 必须先更新一下nowX，否则走下面的流程会无法正确判断
+              nowX = nowX + moveX;
 
-        // 判断是否可视
-        // 整个父元素距离左侧的长度   nowX
-        // 元素距离父节点的距离       offsetLeft
-        // 对比两个长度，就能算出来任意一个节点现在是不是在屏幕的显示区
-        // 不再需要浏览器提供接口
-        
-        // 还未开始滑动，或者已经复位
-        // 添加domTarget.clientWidth，防止某个标题显示了一半
-        if (( Math.abs(nowX) === 0 ) && ( domTarget.offsetLeft + domTarget.clientWidth > deviceWidth)) {
-            if ( domTarget.offsetLeft + deviceWidth > wrapWidth ) {
-                var _moveLeft = wrapWidth - deviceWidth;
-                domScrollNav.style.webkitTransform='translateX(-'+_moveLeft+'px)';
-                nowX = -_moveLeft;
-            } else {
+              // 如果nav最左侧离开屏幕最左侧，就恢复
+              if ( nowX > 0) {
+                  transition(domScrollNav, {field:'left',begin: nowX,change:nowX,ease:tween[_easeMode]});
+                  // domScrollNav.style.webkitTransform='translateX(0px)';
+                  nowX = 0;
+              }
+
+              // 如果nav最右侧离开屏幕最右侧，就恢复
+              if  (nowX < 0 && (Math.abs(nowX) > reduceWidth)) {
+                  var changeX = (Math.abs(nowX) + deviceWidth ) -domScrollNav.clientWidth;
+                  transition(domScrollNav, {field:'right',begin: nowX,change:changeX,ease:tween[_easeMode]});
+                  // domScrollNav.style.webkitTransform='translateX(-'+reduceWidth+'px)';
+                  nowX = -reduceWidth;
+              }
+          }, false);
+
+          // 始终保持当前激活元素可见
+          function keepVisiable (_index) {
+            var domTarget = domNavTitle[_index];
+
+            // 整个父元素距离左侧的长度   nowX
+            // 元素距离父节点的距离       offsetLeft
+            // 对比两个长度，就能算出来任意一个节点现在是不是在屏幕的显示区
+            // 不再需要浏览器提供接口
+            
+            // 还未开始滑动，或者已经复位
+            // 添加domTarget.clientWidth，防止某个标题显示了一半
+            if (( Math.abs(nowX) === 0 ) && ( domTarget.offsetLeft + domTarget.clientWidth > deviceWidth)) {
+                if ( domTarget.offsetLeft + deviceWidth > wrapWidth ) {
+                    var _moveLeft = wrapWidth - deviceWidth;
+                    domScrollNav.style.webkitTransform='translateX(-'+_moveLeft+'px)';
+                    nowX = -_moveLeft;
+                } else {
+                    domScrollNav.style.webkitTransform='translateX(-'+domTarget.offsetLeft+'px)';
+                    nowX = -domTarget.offsetLeft;
+                }
+                
+            }
+
+            // 滑动到最右侧
+            if ( domTarget.offsetLeft < Math.abs(nowX) ) {
                 domScrollNav.style.webkitTransform='translateX(-'+domTarget.offsetLeft+'px)';
                 nowX = -domTarget.offsetLeft;
-            }
-            
-        }
+            }    
+          }
 
-        if ( domTarget.offsetLeft < Math.abs(nowX) ) {
-            domScrollNav.style.webkitTransform='translateX(-'+domTarget.offsetLeft+'px)';
-            nowX = -domTarget.offsetLeft;
-        }
-        
-    }
+          // 摘自司徒正美
+          var transition = function(el){
+            // el.style.position = "absolute";
+            var options = arguments[1] || {},
+            begin       = options.begin,//开始位置
+            change      = options.change,//变化量
+            duration    = options.duration || 500,//缓动效果持续时间
+            field       = options.field,//必须指定，基本上对left,right这个属性进行移动
+            ftp         = options.ftp || 50,
+            onEnd       = options.onEnd || function(){},
+            ease        = options.ease,//要使用的缓动公式
+            // end         = begin + change,//结束位置
+            end         = 0,//结束位置
+            startTime   = new Date().getTime();//开始执行的时间
+            (function(){
+                setTimeout(function(){
+                    var newTime = new Date().getTime(),//当前帧开始的时间
+                    timestamp = newTime - startTime,//逝去时间
+                    delta = ease(timestamp / duration);
 
-    function next (_callback) {
-        gActive = gActive +1 >= domNavTitle.length? domNavTitle.length -1  : gActive + 1;
-        keepVisiable (gActive);
-        _callback(gActive);
-        return gActive;
-    }
-
-    function prev (_callback) {
-        gActive = gActive -1 <= 0? 0  : gActive - 1;
-        keepVisiable (gActive);
-        _callback(gActive);
-        return gActive;
-    }
-
-    next(function (_index) {
-        for (var i = 0; i < domNavTitle.length; i++) {
-            domNavTitle[i].className = 'nav-title';
-        }
-
-        domNavTitle[_index].className = 'nav-title active';
-    });
-
-    var transition = function(el){
-        // el.style.position = "absolute";
-        var options = arguments[1] || {},
-        begin       = options.begin,//开始位置
-        change      = options.change,//变化量
-        duration    = options.duration || 500,//缓动效果持续时间
-        field       = options.field,//必须指定，基本上对left,right这个属性进行移动
-        ftp         = options.ftp || 50,
-        onEnd       = options.onEnd || function(){},
-        ease        = options.ease,//要使用的缓动公式
-        // end         = begin + change,//结束位置
-        end         = 0,//结束位置
-        startTime   = new Date().getTime();//开始执行的时间
-        (function(){
-            setTimeout(function(){
-                var newTime = new Date().getTime(),//当前帧开始的时间
-                timestamp = newTime - startTime,//逝去时间
-                delta = ease(timestamp / duration);
-
-                // el.style[field] = Math.ceil(begin + delta * change) + "px"
-                if (field === 'left') {
-                    console.log(Math.ceil(begin - delta * change));
-                    el.style.webkitTransform='translateX('+Math.ceil(begin - delta * change)+'px)';
-                } else {
-                    console.log(Math.ceil(begin + delta * change));
-                    el.style.webkitTransform='translateX(-'+Math.abs(Math.ceil(begin + delta * change)) +'px)';
-                }
-
-                if(duration <= timestamp){
-                    // el.style[field] = end + "px";
-                    if ( field === 'left') {
-                        el.style.webkitTransform='translateX(0px)';
+                    // el.style[field] = Math.ceil(begin + delta * change) + "px"
+                    if (field === 'left') {
+                        console.log(Math.ceil(begin - delta * change));
+                        el.style.webkitTransform='translateX('+Math.ceil(begin - delta * change)+'px)';
                     } else {
-                        el.style.webkitTransform='translateX(-'+reduceWidth+'px)';
+                        console.log(Math.ceil(begin + delta * change));
+                        el.style.webkitTransform='translateX(-'+Math.abs(Math.ceil(begin + delta * change)) +'px)';
                     }
 
-                    onEnd();
-                }else{
-                    setTimeout(arguments.callee,1000/ftp);
-                }
-            },1000/ftp)
-        })()
-    }
+                    if(duration <= timestamp){
+                        // el.style[field] = end + "px";
+                        if ( field === 'left') {
+                            el.style.webkitTransform='translateX(0px)';
+                        } else {
+                            el.style.webkitTransform='translateX(-'+reduceWidth+'px)';
+                        }
 
-    var tween = {
-    easeInQuad: function(pos){
-      return Math.pow(pos, 2);
-    },
- 
-    easeOutQuad: function(pos){
-      return -(Math.pow((pos-1), 2) -1);
-    },
- 
-    easeInOutQuad: function(pos){
-      if ((pos/=0.5) < 1) return 0.5*Math.pow(pos,2);
-      return -0.5 * ((pos-=2)*pos - 2);
-    },
- 
-    easeInCubic: function(pos){
-      return Math.pow(pos, 3);
-    },
- 
-    easeOutCubic: function(pos){
-      return (Math.pow((pos-1), 3) +1);
-    },
- 
-    easeInOutCubic: function(pos){
-      if ((pos/=0.5) < 1) return 0.5*Math.pow(pos,3);
-      return 0.5 * (Math.pow((pos-2),3) + 2);
-    },
- 
-    easeInQuart: function(pos){
-      return Math.pow(pos, 4);
-    },
- 
-    easeOutQuart: function(pos){
-      return -(Math.pow((pos-1), 4) -1)
-    },
- 
-    easeInOutQuart: function(pos){
-      if ((pos/=0.5) < 1) return 0.5*Math.pow(pos,4);
-      return -0.5 * ((pos-=2)*Math.pow(pos,3) - 2);
-    },
- 
-    easeInQuint: function(pos){
-      return Math.pow(pos, 5);
-    },
- 
-    easeOutQuint: function(pos){
-      return (Math.pow((pos-1), 5) +1);
-    },
- 
-    easeInOutQuint: function(pos){
-      if ((pos/=0.5) < 1) return 0.5*Math.pow(pos,5);
-      return 0.5 * (Math.pow((pos-2),5) + 2);
-    },
- 
-    easeInSine: function(pos){
-      return -Math.cos(pos * (Math.PI/2)) + 1;
-    },
- 
-    easeOutSine: function(pos){
-      return Math.sin(pos * (Math.PI/2));
-    },
- 
-    easeInOutSine: function(pos){
-      return (-.5 * (Math.cos(Math.PI*pos) -1));
-    },
- 
-    easeInExpo: function(pos){
-      return (pos==0) ? 0 : Math.pow(2, 10 * (pos - 1));
-    },
- 
-    easeOutExpo: function(pos){
-      return (pos==1) ? 1 : -Math.pow(2, -10 * pos) + 1;
-    },
- 
-    easeInOutExpo: function(pos){
-      if(pos==0) return 0;
-      if(pos==1) return 1;
-      if((pos/=0.5) < 1) return 0.5 * Math.pow(2,10 * (pos-1));
-      return 0.5 * (-Math.pow(2, -10 * --pos) + 2);
-    },
- 
-    easeInCirc: function(pos){
-      return -(Math.sqrt(1 - (pos*pos)) - 1);
-    },
- 
-    easeOutCirc: function(pos){
-      return Math.sqrt(1 - Math.pow((pos-1), 2))
-    },
- 
-    easeInOutCirc: function(pos){
-      if((pos/=0.5) < 1) return -0.5 * (Math.sqrt(1 - pos*pos) - 1);
-      return 0.5 * (Math.sqrt(1 - (pos-=2)*pos) + 1);
-    },
- 
-    easeOutBounce: function(pos){
-      if ((pos) < (1/2.75)) {
-        return (7.5625*pos*pos);
-      } else if (pos < (2/2.75)) {
-        return (7.5625*(pos-=(1.5/2.75))*pos + .75);
-      } else if (pos < (2.5/2.75)) {
-        return (7.5625*(pos-=(2.25/2.75))*pos + .9375);
-      } else {
-        return (7.5625*(pos-=(2.625/2.75))*pos + .984375);
-      }
-    },
- 
-    easeInBack: function(pos){
-      var s = 1.70158;
-      return (pos)*pos*((s+1)*pos - s);
-    },
- 
-    easeOutBack: function(pos){
-      var s = 1.70158;
-      return (pos=pos-1)*pos*((s+1)*pos + s) + 1;
-    },
- 
-    easeInOutBack: function(pos){
-      var s = 1.70158;
-      if((pos/=0.5) < 1) return 0.5*(pos*pos*(((s*=(1.525))+1)*pos -s));
-      return 0.5*((pos-=2)*pos*(((s*=(1.525))+1)*pos +s) +2);
-    },
- 
-    elastic: function(pos) {
-      return -1 * Math.pow(4,-8*pos) * Math.sin((pos*6-1)*(2*Math.PI)/2) + 1;
-    },
- 
-    swingFromTo: function(pos) {
-      var s = 1.70158;
-      return ((pos/=0.5) < 1) ? 0.5*(pos*pos*(((s*=(1.525))+1)*pos - s)) :
-        0.5*((pos-=2)*pos*(((s*=(1.525))+1)*pos + s) + 2);
-    },
- 
-    swingFrom: function(pos) {
-      var s = 1.70158;
-      return pos*pos*((s+1)*pos - s);
-    },
- 
-    swingTo: function(pos) {
-      var s = 1.70158;
-      return (pos-=1)*pos*((s+1)*pos + s) + 1;
-    },
- 
-    bounce: function(pos) {
-      if (pos < (1/2.75)) {
-        return (7.5625*pos*pos);
-      } else if (pos < (2/2.75)) {
-        return (7.5625*(pos-=(1.5/2.75))*pos + .75);
-      } else if (pos < (2.5/2.75)) {
-        return (7.5625*(pos-=(2.25/2.75))*pos + .9375);
-      } else {
-        return (7.5625*(pos-=(2.625/2.75))*pos + .984375);
-      }
-    },
- 
-    bouncePast: function(pos) {
-      if (pos < (1/2.75)) {
-        return (7.5625*pos*pos);
-      } else if (pos < (2/2.75)) {
-        return 2 - (7.5625*(pos-=(1.5/2.75))*pos + .75);
-      } else if (pos < (2.5/2.75)) {
-        return 2 - (7.5625*(pos-=(2.25/2.75))*pos + .9375);
-      } else {
-        return 2 - (7.5625*(pos-=(2.625/2.75))*pos + .984375);
-      }
-    },
- 
-    easeFromTo: function(pos) {
-      if ((pos/=0.5) < 1) return 0.5*Math.pow(pos,4);
-      return -0.5 * ((pos-=2)*Math.pow(pos,3) - 2);
-    },
- 
-    easeFrom: function(pos) {
-      return Math.pow(pos,4);
-    },
- 
-    easeTo: function(pos) {
-      return Math.pow(pos,0.25);
-    },
- 
-    linear:  function(pos) {
-      return pos
-    },
- 
-    sinusoidal: function(pos) {
-      return (-Math.cos(pos*Math.PI)/2) + 0.5;
-    },
- 
-    reverse: function(pos) {
-      return 1 - pos;
-    },
- 
-    mirror: function(pos, transition) {
-      transition = transition || tween.sinusoidal;
-      if(pos<0.5)
-        return transition(pos*2);
-      else
-        return transition(1-(pos-0.5)*2);
-    },
- 
-    flicker: function(pos) {
-      var pos = pos + (Math.random()-0.5)/5;
-      return tween.sinusoidal(pos < 0 ? 0 : pos > 1 ? 1 : pos);
-    },
- 
-    wobble: function(pos) {
-      return (-Math.cos(pos*Math.PI*(9*pos))/2) + 0.5;
-    },
- 
-    pulse: function(pos, pulses) {
-      return (-Math.cos((pos*((pulses||5)-.5)*2)*Math.PI)/2) + .5;
-    },
- 
-    blink: function(pos, blinks) {
-      return Math.round(pos*(blinks||5)) % 2;
-    },
- 
-    spring: function(pos) {
-      return 1 - (Math.cos(pos * 4.5 * Math.PI) * Math.exp(-pos * 6));
-    },
- 
-    none: function(pos){
-      return 0
-    },
- 
-    full: function(pos){
-      return 1
-    }
-  }
+                        onEnd();
+                    }else{
+                        setTimeout(arguments.callee,1000/ftp);
+                    }
+                },1000/ftp)
+            })()
+          }
 
+          // 摘自司徒正美
+          var tween = {
+            easeInQuad: function(pos){
+              return Math.pow(pos, 2);
+            },
+         
+            easeOutQuad: function(pos){
+              return -(Math.pow((pos-1), 2) -1);
+            },
+         
+            easeInOutQuad: function(pos){
+              if ((pos/=0.5) < 1) return 0.5*Math.pow(pos,2);
+              return -0.5 * ((pos-=2)*pos - 2);
+            },
+         
+            easeInCubic: function(pos){
+              return Math.pow(pos, 3);
+            },
+         
+            easeOutCubic: function(pos){
+              return (Math.pow((pos-1), 3) +1);
+            },
+         
+            easeInOutCubic: function(pos){
+              if ((pos/=0.5) < 1) return 0.5*Math.pow(pos,3);
+              return 0.5 * (Math.pow((pos-2),3) + 2);
+            },
+         
+            easeInQuart: function(pos){
+              return Math.pow(pos, 4);
+            },
+         
+            easeOutQuart: function(pos){
+              return -(Math.pow((pos-1), 4) -1)
+            },
+         
+            easeInOutQuart: function(pos){
+              if ((pos/=0.5) < 1) return 0.5*Math.pow(pos,4);
+              return -0.5 * ((pos-=2)*Math.pow(pos,3) - 2);
+            },
+         
+            easeInQuint: function(pos){
+              return Math.pow(pos, 5);
+            },
+         
+            easeOutQuint: function(pos){
+              return (Math.pow((pos-1), 5) +1);
+            },
+         
+            easeInOutQuint: function(pos){
+              if ((pos/=0.5) < 1) return 0.5*Math.pow(pos,5);
+              return 0.5 * (Math.pow((pos-2),5) + 2);
+            },
+         
+            easeInSine: function(pos){
+              return -Math.cos(pos * (Math.PI/2)) + 1;
+            },
+         
+            easeOutSine: function(pos){
+              return Math.sin(pos * (Math.PI/2));
+            },
+         
+            easeInOutSine: function(pos){
+              return (-.5 * (Math.cos(Math.PI*pos) -1));
+            },
+         
+            easeInExpo: function(pos){
+              return (pos==0) ? 0 : Math.pow(2, 10 * (pos - 1));
+            },
+         
+            easeOutExpo: function(pos){
+              return (pos==1) ? 1 : -Math.pow(2, -10 * pos) + 1;
+            },
+         
+            easeInOutExpo: function(pos){
+              if(pos==0) return 0;
+              if(pos==1) return 1;
+              if((pos/=0.5) < 1) return 0.5 * Math.pow(2,10 * (pos-1));
+              return 0.5 * (-Math.pow(2, -10 * --pos) + 2);
+            },
+         
+            easeInCirc: function(pos){
+              return -(Math.sqrt(1 - (pos*pos)) - 1);
+            },
+         
+            easeOutCirc: function(pos){
+              return Math.sqrt(1 - Math.pow((pos-1), 2))
+            },
+         
+            easeInOutCirc: function(pos){
+              if((pos/=0.5) < 1) return -0.5 * (Math.sqrt(1 - pos*pos) - 1);
+              return 0.5 * (Math.sqrt(1 - (pos-=2)*pos) + 1);
+            },
+         
+            easeOutBounce: function(pos){
+              if ((pos) < (1/2.75)) {
+                return (7.5625*pos*pos);
+              } else if (pos < (2/2.75)) {
+                return (7.5625*(pos-=(1.5/2.75))*pos + .75);
+              } else if (pos < (2.5/2.75)) {
+                return (7.5625*(pos-=(2.25/2.75))*pos + .9375);
+              } else {
+                return (7.5625*(pos-=(2.625/2.75))*pos + .984375);
+              }
+            },
+         
+            easeInBack: function(pos){
+              var s = 1.70158;
+              return (pos)*pos*((s+1)*pos - s);
+            },
+         
+            easeOutBack: function(pos){
+              var s = 1.70158;
+              return (pos=pos-1)*pos*((s+1)*pos + s) + 1;
+            },
+         
+            easeInOutBack: function(pos){
+              var s = 1.70158;
+              if((pos/=0.5) < 1) return 0.5*(pos*pos*(((s*=(1.525))+1)*pos -s));
+              return 0.5*((pos-=2)*pos*(((s*=(1.525))+1)*pos +s) +2);
+            },
+         
+            elastic: function(pos) {
+              return -1 * Math.pow(4,-8*pos) * Math.sin((pos*6-1)*(2*Math.PI)/2) + 1;
+            },
+         
+            swingFromTo: function(pos) {
+              var s = 1.70158;
+              return ((pos/=0.5) < 1) ? 0.5*(pos*pos*(((s*=(1.525))+1)*pos - s)) :
+                0.5*((pos-=2)*pos*(((s*=(1.525))+1)*pos + s) + 2);
+            },
+         
+            swingFrom: function(pos) {
+              var s = 1.70158;
+              return pos*pos*((s+1)*pos - s);
+            },
+         
+            swingTo: function(pos) {
+              var s = 1.70158;
+              return (pos-=1)*pos*((s+1)*pos + s) + 1;
+            },
+         
+            bounce: function(pos) {
+              if (pos < (1/2.75)) {
+                return (7.5625*pos*pos);
+              } else if (pos < (2/2.75)) {
+                return (7.5625*(pos-=(1.5/2.75))*pos + .75);
+              } else if (pos < (2.5/2.75)) {
+                return (7.5625*(pos-=(2.25/2.75))*pos + .9375);
+              } else {
+                return (7.5625*(pos-=(2.625/2.75))*pos + .984375);
+              }
+            },
+         
+            bouncePast: function(pos) {
+              if (pos < (1/2.75)) {
+                return (7.5625*pos*pos);
+              } else if (pos < (2/2.75)) {
+                return 2 - (7.5625*(pos-=(1.5/2.75))*pos + .75);
+              } else if (pos < (2.5/2.75)) {
+                return 2 - (7.5625*(pos-=(2.25/2.75))*pos + .9375);
+              } else {
+                return 2 - (7.5625*(pos-=(2.625/2.75))*pos + .984375);
+              }
+            },
+         
+            easeFromTo: function(pos) {
+              if ((pos/=0.5) < 1) return 0.5*Math.pow(pos,4);
+              return -0.5 * ((pos-=2)*Math.pow(pos,3) - 2);
+            },
+         
+            easeFrom: function(pos) {
+              return Math.pow(pos,4);
+            },
+         
+            easeTo: function(pos) {
+              return Math.pow(pos,0.25);
+            },
+         
+            linear:  function(pos) {
+              return pos
+            },
+         
+            sinusoidal: function(pos) {
+              return (-Math.cos(pos*Math.PI)/2) + 0.5;
+            },
+         
+            reverse: function(pos) {
+              return 1 - pos;
+            },
+         
+            mirror: function(pos, transition) {
+              transition = transition || tween.sinusoidal;
+              if(pos<0.5)
+                return transition(pos*2);
+              else
+                return transition(1-(pos-0.5)*2);
+            },
+         
+            flicker: function(pos) {
+              var pos = pos + (Math.random()-0.5)/5;
+              return tween.sinusoidal(pos < 0 ? 0 : pos > 1 ? 1 : pos);
+            },
+         
+            wobble: function(pos) {
+              return (-Math.cos(pos*Math.PI*(9*pos))/2) + 0.5;
+            },
+         
+            pulse: function(pos, pulses) {
+              return (-Math.cos((pos*((pulses||5)-.5)*2)*Math.PI)/2) + .5;
+            },
+         
+            blink: function(pos, blinks) {
+              return Math.round(pos*(blinks||5)) % 2;
+            },
+         
+            spring: function(pos) {
+              return 1 - (Math.cos(pos * 4.5 * Math.PI) * Math.exp(-pos * 6));
+            },
+         
+            none: function(pos){
+              return 0
+            },
+         
+            full: function(pos){
+              return 1
+            }
+          }
+
+          return {
+            next : function () {
+              gActive = gActive +1 >= domNavTitle.length? domNavTitle.length -1  : gActive + 1;
+              keepVisiable (gActive);
+
+              for (var i = 0; i < domNavTitle.length; i++) {
+                  domNavTitle[i].className = clsContainee;
+              }
+
+              domNavTitle[gActive].className = clsContainee + ' active';
+
+              return gActive;
+            },
+            prev : function () {
+              gActive = gActive -1 <= 0? 0  : gActive - 1;
+              keepVisiable (gActive);
+              
+              for (var i = 0; i < domNavTitle.length; i++) {
+                  domNavTitle[i].className = clsContainee;
+              }
+
+              domNavTitle[gActive].className = clsContainee + ' active';
+
+              return gActive;
+            }
+          } // end return
+        }
+
+        window.ScrollNav = ScrollNav;
+    })();
+
+    var _n = new ScrollNav({easeMode: 'easeOutBounce',clsContainer : 'scroll-nav', clsContainee : 'nav-title', containerWidth: 600});
+
+    _n.next();
 
 
 </script>
